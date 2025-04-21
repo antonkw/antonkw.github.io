@@ -41,6 +41,7 @@ Note 2. If you like to work on problems like this (tweaking logical plans, craft
 
 # Parsing step
 I'll use [Apache Calcite](https://calcite.apache.org/) to parse and transform the query. You don't need to know the configuration details, but all code is available in the project if you want to download and run it yourself.
+The link: https://github.com/antonkw/rec-cte-demo
 
 ```scala
 val fibonacci =
