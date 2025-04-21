@@ -13,7 +13,7 @@ tags:
 classes: wide
 ---
 
-<img alt="title_fib_q" src="/assets/images/20250421q.png" width="500">
+<img alt="title_fib_q" src="/assets/images/20250421q.png" width="50%">
 
 # Introduction
 I have a controversial take for today. If you struggle with understanding fixed points, ~~you just need to understand them first~~ reverse engineering SQL's recursive CTEs can be **very** beneficial.
