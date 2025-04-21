@@ -13,6 +13,8 @@ tags:
 classes: wide
 ---
 
+<img alt="title_fib_q" src="/assets/images/20250421q.png" width="500">
+
 # Introduction
 I have a controversial take for today. If you struggle with understanding fixed points, ~~you just need to understand them first~~ reverse engineering SQL's recursive CTEs can be **very** beneficial.
 
@@ -94,7 +96,7 @@ While we're not particularly interested in syntax-level nodes today, I've includ
 
 It's worth noting that `SqlWithItem` has an explicit literal to mark recursive CTEs.
 
-<img alt="pipeline" src="/assets/images/20250421_scr_fib.jpg" width="650">
+<img alt="fib" src="/assets/images/20250421_scr_fib.jpg" width="650">
 
 And to accomplish the formal "syntax loop," let's validate the query and reformat it.
 ```scala
