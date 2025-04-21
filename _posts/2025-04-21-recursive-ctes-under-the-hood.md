@@ -1,6 +1,6 @@
 ---
 title: "Grokking Recursion Through SQL"
-permalink: /scala/iron-updates/
+permalink: /calcite/recursive-cte/
 excerpt: "Understanding Recursive CTEs gives another perspective on recursions overall."
 categories:
   - scala
