@@ -14,11 +14,9 @@ classes: wide
 ---
 
 # Introduction
-
 I have a controversial take for today. If you struggle with understanding fixed points, ~~you just need to understand them first~~ reverse engineering SQL's recursive CTEs can be **very** beneficial.
 
 Recursive CTEs are queries that use themselves as part of implementation, for example:
-
 ```sql
 WITH RECURSIVE FIBONACCI (N, FIB, NEXT_FIB) AS (   
   SELECT 1 AS N, 0 AS FIB, 1 AS NEXT_FIB  
@@ -34,16 +32,14 @@ Recently I worked on implementing recursive queries for a custom SQL dialect. Fo
 I discovered that approaching the "recursion problem" through SQL-related implementations is a non-obvious but straightforward way to build a mental model around it.
 
 In this post, I'll cover:
-
 - Quick Apache Calcite set-up (won't be part of the post, but the linked repo has all the code) to parse recursive queries
 - Studying relational nodes that represent recursion in logical plans, examining what contracts they provide and how they decorate fixed points
 
 Note 1. I am not going to make full cycle and compile a query back to some dialect. Main focus is to show how relational nodes represent recursion.
-Note 2. If you like to work on problems like this (tweaking logical plans, crafting custom SQL dialects, etc.), you might be interesting in globally remote [Senior/Staff Backend Engineer - Query Compiler](https://jobs.narrative.io/open-positions/backend-engineer-query-compiler/) job opening.
 
+Note 2. If you like to work on problems like this (tweaking logical plans, crafting custom SQL dialects, etc.), you might be interested in globally remote [Senior/Staff Backend Engineer - Query Compiler](https://jobs.narrative.io/open-positions/backend-engineer-query-compiler/) job opening at Narrative I/O. Feel free to reach me out in case of questions.
 
 # Parsing step
-
 I'll use [Apache Calcite](https://calcite.apache.org/) to parse and transform the query. You don't need to know the configuration details, but all code is available in the project if you want to download and run it yourself.
 
 ```scala
@@ -93,11 +89,9 @@ ORDER BY `N`
 */
 ```
 
-
 While we're not particularly interested in syntax-level nodes today, I've included the screenshot to demonstrate how this query is represented by a `SqlOrderBy` node that contains other nodes like `SqlWith`, `SqlNodeList`, `SqlWithItem`, etc.
 
 It's worth noting that `SqlWithItem` has an explicit literal to mark recursive CTEs.
-
 
 <img alt="pipeline" src="/assets/images/20250421_scr_fib.jpg" width="650">
 
@@ -131,7 +125,6 @@ WITH RECURSIVE FIBONACCI (N, FIB, NEXT_FIB) AS (SELECT
 ```
 
 # Relational nodes
-
 ## Logical plan
 Finally, we reach the point where we can build relational nodes and see how the logical plan looks like:
 ```scala
@@ -139,7 +132,6 @@ val relationalNode: RelNode = Calcite.convertSqlToRel(validatedNode)
 val logicalPlanPrinted = relationalNode.explain()  
 println(logicalPlanPrinted)
 ```
-
 ```
 LogicalSort(sort0=[$0], dir0=[ASC])
   LogicalProject(N=[$0], FIB=[$1])
@@ -151,10 +143,7 @@ LogicalSort(sort0=[$0], dir0=[ASC])
           LogicalFilter(condition=[<($0, 10)])
             LogicalTableScan(table=[[FIBONACCI]])
 ```
-
-
 If you're not familiar with the concept of logical plans, this output might seem unreadable. I'll try to explain it from the bottom up, focusing on the essential details.
-
 ```
 LogicalTableSpool(readType=[LAZY], writeType=[LAZY], table=[[FIBONACCI]])
     LogicalValues(tuples=[[{ 1, 0, 1 }]])
@@ -218,9 +207,19 @@ It operates by repeatedly unioning the base case rows with the recursive case ro
 - Newly generated rows from the recursive case
 - The accumulated result set
 
+## Union meets Spool
 This union continues until no new rows satisfy the termination condition—formally reaching a fixed point. I want to emphasize that each individual step processes newly generated row(s) while all previous results are accumulated in a transient table.
 
-This is still _just a logical plan_. We're not discussing actual execution yet. However, the plan describes the nature of the processing and should be unambiguous for further interpretations.
+To round up, let's recall how those new rows are being projected from the transient table:
+```
+LogicalProject(EXPR$0=[+($0, 1)], NEXT_FIB=[$2], EXPR$2=[+($1, $2)])
+  LogicalFilter(condition=[<($0, 10)])
+```
+Here we have:
+- A filter which is effectively responsible for stopping the processing (no new rows are returned after N reaches 10)
+- Expressions being applied to the retrieved results to generate the next Fibonacci numbers
+
+And this is still _just a logical plan_. We're not discussing actual execution yet. However, the plan describes the nature of the processing and should be unambiguous for further interpretations.
 
 ### Optional iteration limit
 Since this is a generic pattern rather than a particular physical implementation, some flexibility remains. For example, let's examine the constructor of the node itself in the codebase:
